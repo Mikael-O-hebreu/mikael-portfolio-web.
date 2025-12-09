@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 40px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .todo-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        #nova-tarefa {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #adicionar-btn {
+            padding: 15px 30px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        #adicionar-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .todo-list {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            min-height: 200px;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .todo-checkbox {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .todo-text {
+            flex: 1;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Lista de Tarefas</h1>
+
+        <div class="todo-input">
+            <input type="text" id="nova-tarefa" placeholder="Digite uma nova tarefa...">
+            <button id="adicionar-btn" onclick="adicionarTarefa()">Adicionar</button>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" onclick="filtrarTarefas('todas')">Todas</button>
+            <button class="filter-btn" onclick="filtrarTarefas('ativas')">Ativas</button>
+            <button class="filter-btn" onclick="filtrarTarefas('concluidas')">Concluídas</button>
+        </div>
+
+        <div class="todo-list" id="lista-tarefas">
+            <div class="empty-message">Nenhuma tarefa adicionada ainda.</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="total-tarefas">0</span>
+                <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="tarefas-ativas">0</span>
+                <span class="stat-label">Ativas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="tarefas-concluidas">0</span>
+                <span class="stat-label">Concluídas</span>
+            </div>
+        </div>
+
+        <a href="index.html" class="back-link">← Voltar ao Portfólio</a>
+    </div>
+
+    <script>
+        let tarefas = [];
+        let filtroAtual = 'todas';
+
+        // Carregar tarefas do localStorage
+        function carregarTarefas() {
+            const tarefasSalvas = localStorage.getItem('tarefas');
+            if (tarefasSalvas) {
+                tarefas = JSON.parse(tarefasSalvas);
+                renderizarTarefas();
+            }
+        }
+
+        // Salvar tarefas no localStorage
+        function salvarTarefas() {
+            localStorage.setItem('tarefas', JSON.stringify(tarefas));
+        }
+
+        // Adicionar nova tarefa
+        function adicionarTarefa() {
+            const input = document.getElementById('nova-tarefa');
+            const texto = input.value.trim();
+
+            if (!texto) {
+                return;
+            }
+
+            const novaTarefa = {
+                id: Date.now(),
+                texto: texto,
+                concluida: false
+            };
+
+            tarefas.unshift(novaTarefa);
+            salvarTarefas();
+            renderizarTarefas();
+            input.value = '';
+        }
+
+        // Alternar status de conclusão
+        function toggleTarefa(id) {
+            const tarefa = tarefas.find(t => t.id === id);
+            if (tarefa) {
+                tarefa.concluida = !tarefa.concluida;
+                salvarTarefas();
+                renderizarTarefas();
+            }
+        }
+
+        // Deletar tarefa
+        function deletarTarefa(id) {
+            tarefas = tarefas.filter(t => t.id !== id);
+            salvarTarefas();
+            renderizarTarefas();
+        }
+
+        // Filtrar tarefas
+        function filtrarTarefas(filtro) {
+            filtroAtual = filtro;
+            
+            // Atualizar botões ativos
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderizarTarefas();
+        }
+
+        // Renderizar tarefas
+        function renderizarTarefas() {
+            const lista = document.getElementById('lista-tarefas');
+            
+            let tarefasFiltradas = tarefas;
+            
+            if (filtroAtual === 'ativas') {
+                tarefasFiltradas = tarefas.filter(t => !t.concluida);
+            } else if (filtroAtual === 'concluidas') {
+                tarefasFiltradas = tarefas.filter(t => t.concluida);
+            }
+
+            if (tarefasFiltradas.length === 0) {
+                lista.innerHTML = '<div class="empty-message">Nenhuma tarefa encontrada.</div>';
+            } else {
+                lista.innerHTML = tarefasFiltradas.map(tarefa => `
+                    <div class="todo-item ${tarefa.concluida ? 'completed' : ''}">
+                        <input type="checkbox" class="todo-checkbox" 
+                               ${tarefa.concluida ? 'checked' : ''} 
+                               onchange="toggleTarefa(${tarefa.id})">
+                        <span class="todo-text">${tarefa.texto}</span>
+                        <button class="delete-btn" onclick="deletarTarefa(${tarefa.id})">Deletar</button>
+                    </div>
+                `).join('');
+            }
+
+            atualizarEstatisticas();
+        }
+
+        // Atualizar estatísticas
+        function atualizarEstatisticas() {
+            const total = tarefas.length;
+            const concluidas = tarefas.filter(t => t.concluida).length;
+            const ativas = total - concluidas;
+
+            document.getElementById('total-tarefas').textContent = total;
+            document.getElementById('tarefas-ativas').textContent = ativas;
+            document.getElementById('tarefas-concluidas').textContent = concluidas;
+        }
+
+        // Permitir adicionar ao pressionar Enter
+        document.getElementById('nova-tarefa').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                adicionarTarefa();
+            }
+        });
+
+        // Carregar tarefas ao iniciar
+        carregarTarefas();
+    </script>
+</body>
+</html>

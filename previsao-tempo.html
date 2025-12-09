@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão do Tempo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 40px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        #cidade-input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #buscar-btn {
+            padding: 15px 30px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        #buscar-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .weather-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .weather-card.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .city-name {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .temperature {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .description {
+            font-size: 1.5em;
+            color: #666;
+            text-transform: capitalize;
+            margin-bottom: 30px;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .detail-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: white;
+            color: #e74c3c;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .info-message {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .info-message p {
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ Previsão do Tempo</h1>
+
+        <div class="info-message">
+            <p><strong>Nota:</strong> Este projeto demonstra o uso de APIs e requisições assíncronas com JavaScript.</p>
+            <p>Para funcionar completamente, seria necessária uma chave de API do OpenWeatherMap.</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="cidade-input" placeholder="Digite o nome da cidade...">
+            <button id="buscar-btn" onclick="buscarPrevisao()">Buscar</button>
+        </div>
+
+        <div class="loading" id="loading">Carregando...</div>
+
+        <div class="error-message" id="erro">
+            Cidade não encontrada. Por favor, tente novamente.
+        </div>
+
+        <div class="weather-card" id="weather-card">
+            <div class="city-name" id="nome-cidade"></div>
+            <div class="temperature" id="temperatura"></div>
+            <div class="description" id="descricao"></div>
+            
+            <div class="weather-details">
+                <div class="detail-item">
+                    <div class="detail-label">Sensação Térmica</div>
+                    <div class="detail-value" id="sensacao"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Umidade</div>
+                    <div class="detail-value" id="umidade"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Vento</div>
+                    <div class="detail-value" id="vento"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Pressão</div>
+                    <div class="detail-value" id="pressao"></div>
+                </div>
+            </div>
+        </div>
+
+        <a href="index.html" class="back-link">← Voltar ao Portfólio</a>
+    </div>
+
+    <script>
+        // Dados de demonstração para algumas cidades
+        const cidadesDemonstracao = {
+            'fortaleza': {
+                nome: 'Fortaleza, BR',
+                temperatura: 28,
+                descricao: 'ensolarado',
+                sensacao: 30,
+                umidade: 75,
+                vento: 5.5,
+                pressao: 1013
+            },
+            'são paulo': {
+                nome: 'São Paulo, BR',
+                temperatura: 22,
+                descricao: 'parcialmente nublado',
+                sensacao: 21,
+                umidade: 60,
+                vento: 3.2,
+                pressao: 1015
+            },
+            'rio de janeiro': {
+                nome: 'Rio de Janeiro, BR',
+                temperatura: 26,
+                descricao: 'ensolarado',
+                sensacao: 28,
+                umidade: 70,
+                vento: 4.1,
+                pressao: 1012
+            },
+            'brasília': {
+                nome: 'Brasília, BR',
+                temperatura: 24,
+                descricao: 'céu limpo',
+                sensacao: 23,
+                umidade: 45,
+                vento: 2.8,
+                pressao: 1014
+            }
+        };
+
+        function buscarPrevisao() {
+            const cidade = document.getElementById('cidade-input').value.toLowerCase().trim();
+            
+            if (!cidade) {
+                return;
+            }
+
+            // Esconder elementos anteriores
+            document.getElementById('weather-card').classList.remove('show');
+            document.getElementById('erro').classList.remove('show');
+            
+            // Mostrar loading
+            document.getElementById('loading').classList.add('show');
+
+            // Simular requisição à API
+            setTimeout(() => {
+                document.getElementById('loading').classList.remove('show');
+
+                const dados = cidadesDemonstracao[cidade];
+
+                if (dados) {
+                    // Exibir dados
+                    document.getElementById('nome-cidade').textContent = dados.nome;
+                    document.getElementById('temperatura').textContent = dados.temperatura + '°C';
+                    document.getElementById('descricao').textContent = dados.descricao;
+                    document.getElementById('sensacao').textContent = dados.sensacao + '°C';
+                    document.getElementById('umidade').textContent = dados.umidade + '%';
+                    document.getElementById('vento').textContent = dados.vento + ' km/h';
+                    document.getElementById('pressao').textContent = dados.pressao + ' hPa';
+                    
+                    document.getElementById('weather-card').classList.add('show');
+                } else {
+                    document.getElementById('erro').classList.add('show');
+                }
+            }, 1000);
+        }
+
+        // Permitir buscar ao pressionar Enter
+        document.getElementById('cidade-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buscarPrevisao();
+            }
+        });
+    </script>
+</body>
+</html>
