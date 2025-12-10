@@ -142,8 +142,10 @@ contactForm.addEventListener('submit', (e) => {
         console.log('Email:', emailInput.value);
         console.log('Mensagem:', messageInput.value);
 
-        // Exibe modal de sucesso
+        // Exibe modal de sucesso (ou alert, se o modal não funcionar devido a CSS ausente)
         showSuccessModal();
+        // Fallback para garantir que a mensagem de confirmação seja exibida (requisito do trabalho)
+        alert('Mensagem enviada com sucesso! Te respondo assim que possível.');
 
         // Limpa o formulário
         contactForm.reset();
